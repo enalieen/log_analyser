@@ -1,5 +1,8 @@
 from fastapi import FastAPI
 from app.routers import logs
+from app.services.elastic import create_index
+from app.utils.config import es_client as es
+
 
 app = FastAPI(title="Log Analyzer API")
 
@@ -9,4 +12,10 @@ app.include_router(logs.router, prefix="/logs", tags=["logs"])
 
 @app.get("/")
 def index():
-    return {"message": "API is running"}
+    try:
+        es.info()
+        r = create_index()
+        return {"message": f"API is running. Existing index: {r}"}
+    except Exception as e:
+        return {"message": f"API is running. Existing index: {e}"}
+    return {"message": "API is running. existing index:"}

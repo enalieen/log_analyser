@@ -5,6 +5,11 @@ services:
       - '8000:8000'
     networks:
       - esnet
+    volumes:
+      - .:/app
+    depends_on:
+      - elastic
+
   elastic:
     image: elasticsearch:8.11.1
     ports:
@@ -13,6 +18,7 @@ services:
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false
+      - INDEX_NAME=logs
     networks:
       - esnet
 
