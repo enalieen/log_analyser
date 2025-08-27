@@ -1,0 +1,2 @@
+ELASTICSEARCH_HOST = "localhost:9200"
+INDEX_NAME = "logs"
