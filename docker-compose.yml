@@ -1,0 +1,21 @@
+services:
+  app:
+    build: .
+    ports:
+      - '8000:8000'
+    networks:
+      - esnet
+  elastic:
+    image: elasticsearch:8.11.1
+    ports:
+      - '9200:9200'
+      - '9300:9300'
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+    networks:
+      - esnet
+
+networks:
+  esnet:
+    driver: bridge # default docker network
