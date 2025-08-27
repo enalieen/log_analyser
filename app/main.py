@@ -18,4 +18,3 @@ def index():
         return {"message": f"API is running. Existing index: {r}"}
     except Exception as e:
         return {"message": f"API is running. Existing index: {e}"}
-    return {"message": "API is running. existing index:"}
