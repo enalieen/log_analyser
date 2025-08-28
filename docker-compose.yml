@@ -8,9 +8,11 @@ services:
     volumes:
       - .:/app
     depends_on:
-      - elastic
+      elastic:
+        condition: service_healthy
     environment:
       - INDEX_NAME=logs
+      - ELASTICSEARCH_HOST=http://elastic:9200
 
   elastic:
     image: elasticsearch:8.11.1
@@ -22,6 +24,12 @@ services:
       - xpack.security.enabled=false
     networks:
       - esnet
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -s http://localhost:9200 >/dev/null || exit 1']
+      interval: 20s
+      timeout: 10s
+      retries: 10
+      start_period: 40s
 
 networks:
   esnet:

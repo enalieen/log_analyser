@@ -16,4 +16,7 @@ def save_log(log: dict):
 
 
 def get_logs():
-    pass
+    query = {"query": {"match_all": {}}}
+    response = es.search(index=INDEX_NAME, body=query)
+    hits = response["hits"]["hits"]
+    return [hit["_source"] for hit in hits]

@@ -9,16 +9,16 @@ router = APIRouter()
 
 @router.get("/")
 async def get_logs():
-    es_funcs.get_logs()
-    return {"message": "logs"}
+    logs = es_funcs.get_logs()
+    return {"message": logs}
 
 
 @router.post("/add", response_model=LogEntry)
 async def post_logs(entry: LogsEntry):
     # later: save to us + classify w. ML
-    es_funcs.save_log(entry)
+    es_funcs.save_log(entry.dict())
     classify_log(entry)
-    return {"log": entry.dict()}
+    return entry
 
 
 @router.get("/classifications")
