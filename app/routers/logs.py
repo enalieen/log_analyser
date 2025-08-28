@@ -37,3 +37,9 @@ def upd_log_endpoint(id: str, entry: LogsEntry):
 @router.get("/classifications")
 async def get_classifications():
     return {"message": "classifications"}
+
+
+@router.delete("/del/{id}")
+async def del_log_endpoint(id: str):
+    msg = es_funcs.del_log(id)
+    return msg

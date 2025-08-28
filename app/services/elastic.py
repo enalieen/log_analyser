@@ -28,3 +28,11 @@ def upd_log(id: str, entry):
     es.update(index=INDEX_NAME, id=id, body={"doc": entry.dict()})
     updated = es.get(index=INDEX_NAME, id=id)["_source"]
     return LogEntry(**updated)
+
+
+def del_log(id: str):
+    try:
+        es.get(index=INDEX_NAME, id=id)
+        return {"message": "log deleted"}
+    except:
+        return {"message": "log not found"}
