@@ -2,7 +2,6 @@
 from fastapi import APIRouter, HTTPException
 from app.models import LogsEntry, LogEntry
 from app.services import elastic as es_funcs
-from app.services.ml import classify_log
 from datetime import datetime
 
 router = APIRouter()
@@ -23,7 +22,6 @@ async def post_logs(entry: LogsEntry):
         log_data["timestamp"] = datetime.now()
     # later: save to us + classify w. ML
     es_funcs.save_log(log_data)
-    classify_log(log_data)
     # return normalized log
     return LogEntry(**log_data)
 
