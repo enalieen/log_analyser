@@ -3,6 +3,7 @@ from app.utils.config import (
     es_client as es,
 )
 from app.models import LogEntry
+from app.services.ml import get_tags
 
 
 def create_index():
@@ -24,6 +25,7 @@ def create_index():
 def save_log(log: dict):
     log["level"] = classify_log(log)
     response = es.index(index=INDEX_NAME, document=log)
+    log["tags"] = get_tags(log["message"])
     return response, response["_id"]
 
 
@@ -44,6 +46,7 @@ def upd_log(id: str, entry):
     if hasattr(entry, "dict"):
         entry = entry.dict()
     entry["level"] = classify_log(entry)
+    entry["tags"] = get_tags(entry["message"])
     es.update(index=INDEX_NAME, id=id, body={"doc": entry})
     updated = es.get(index=INDEX_NAME, id=id)["_source"]
     return LogEntry(**updated)
@@ -58,6 +61,7 @@ def del_log(id: str):
 
 
 def sort_logs():
+    
     body = {}
     hits = es.search(index=INDEX_NAME, body=body)
     return hits

@@ -18,3 +18,4 @@ class LogEntry(BaseModel):
     timestamp: datetime
     message: str
     level: str
+    tags: tuple

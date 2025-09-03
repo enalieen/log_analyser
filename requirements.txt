@@ -2,3 +2,4 @@ fastapi
 pydantic
 uvicorn 
 elasticsearch<9,>=8
+yake
