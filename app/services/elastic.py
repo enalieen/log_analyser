@@ -1,3 +1,5 @@
+import datetime
+from typing import Optional, List
 from app.utils.config import (
     INDEX_NAME,
     es_client as es,
@@ -13,7 +15,8 @@ def create_index():
             "properties": {
                 "timestamp": {"type": "date"},
                 "message": {"type": "text"},
-                "level": {"type": "text"},
+                "level": {"type": "keyword"},
+                "tags": {"type": "keyword"},
             }
         }
     }
@@ -61,8 +64,30 @@ def del_log(id: str):
 
 
 def sort_logs():
-    
     body = {}
+    hits = es.search(index=INDEX_NAME, body=body)
+    return hits
+
+
+def filter_logs(
+    time: Optional[datetime.datetime] = None,
+    level: Optional[str] = None,
+    tags: Optional[List[str]] = None,
+    limit: Optional[int] = 10,
+):
+    must = {}
+    limit = 10 if limit is None else limit
+    if time:
+        must.append({"term": {"timestamp": time.isoformat()}})
+    if level:
+        must.append({"term": {"level": level}})
+    if tags:
+        for tag in tags:
+            must.append({"term": {"tags": tag}})
+    body = {
+        "size": limit,
+        "query": {"bool": {"must": must}, "sort": {"timestamp": "desc"}},
+    }
     hits = es.search(index=INDEX_NAME, body=body)
     return hits
 
@@ -90,27 +115,3 @@ def classify_log(log: dict) -> str:
         return "payment"
     else:
         return "info"
-
-
-""" def tag_log(log: dict) -> str:
-    msg = log.get("message", "").lower()
-    tags = []
-
-    if any(word in msg for word in ["error", "fail", "exception", "crash"]):
-        tags.append("error")
-    if any(word in msg for word in ["warn", "deprecated", "retry"]):
-        tags.append("warning")
-    if any(word in msg for word in ["debug", "trace", "verbose"]):
-        tags.append("debug") """
-
-
-""" 
-to add: Search with filtering (for example, by ERROR level, by date or by message text):
-
-Aggregations (count the number of logs by levels, by days, etc.).
-
-Pagination (to return logs in parts, not all at once).
-
-Classification/tagging.
-
-(optional) Archiving/cleaning old logs. """
