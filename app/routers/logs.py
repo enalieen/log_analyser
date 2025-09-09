@@ -14,10 +14,12 @@ async def get_logs(
     level: Optional[str] = None,
     tags: Optional[List[str]] = None,
     limit: Optional[int] = None,
+    starttime: Optional[datetime] = None,
+    endtime: Optional[datetime] = None,
 ):
     logs = []
-    if time or level or tags or limit:
-        logs = es_funcs.filter_logs(time, level, tags, limit)
+    if time or level or tags or limit or starttime or endtime:
+        logs = es_funcs.filter_logs(time, level, tags, limit, starttime, endtime)
     else:
         logs = es_funcs.get_logs()
     if not logs:

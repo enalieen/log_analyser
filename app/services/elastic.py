@@ -76,6 +76,8 @@ def filter_logs(
     level: Optional[str] = None,
     tags: Optional[List[str]] = None,
     limit: Optional[int] = 10,
+    starttime: Optional[datetime.datetime] = None,
+    endtime: Optional[datetime.datetime] = None,
 ):
     must = []
     limit = 10 if limit is None else limit
@@ -87,6 +89,13 @@ def filter_logs(
         for tag in tags:
             # each tag must be present
             must.append({"term": {"tags": tag}})
+    if starttime or endtime:
+        range_query = {}
+        if starttime:
+            range_query["gte"] = starttime.isoformat()
+        if endtime:
+            range_query["lte"] = endtime.isoformat()
+        must.append({"range": {"timestamp": range_query}})
 
     body = {
         "size": limit,
