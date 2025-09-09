@@ -131,3 +131,6 @@ def search_logs(query: str, limit: int = 10):
     if not resp:
         return {"message": "No logs found"}
     return [{"id": hit["_id"], "log": LogEntry(**hit["_source"])} for hit in resp]
+
+
+""" def get_alerts() """

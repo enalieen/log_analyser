@@ -1,3 +1,5 @@
+from elasticsearch import helpers
+
 def classify_log(log: dict) -> str:
     msg = log.get("message", "").lower()
 
@@ -23,21 +25,12 @@ def classify_log(log: dict) -> str:
         return "info"
 
 
-""" def aggregate_by_level():
-    body = {
-        "size": 0,
-        "aggs": {
-            "by_level": {
-                "terms": {"field": "level"},
-                "aggs": {
-                    "top_logs": {
-                        "top_hits": {
-                            "sort": [{"timestamp": {"order": "desc"}}],
-                            "_source": {"includes": ["timestamp", "message", "tags"]},
-                            "size": 5,
-                        }
-                    }
-                },
-            }
-        },
-    } """
+""" def bulk_save_logs(logs: list[dict]):
+    actions = [
+        {
+            "_index": "logs",
+            "_source": log,
+        }
+        for log in logs
+    ]
+    helpers.bulk(es, actions) """
