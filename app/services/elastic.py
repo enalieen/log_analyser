@@ -99,9 +99,26 @@ def filter_logs(
         return {"id": hit["_id"], "log": LogEntry(**hit["_source"])}
 
 
+# with JSON, frontend the graphs can be created
 def aggregate_by_level():
     # to return only aggregation results, set size to 0, without search hits:
     body = {"size": 0, "aggs": {"by_level": {"terms": {"field": "level.keyword"}}}}
     resp = es.search(index=INDEX_NAME, body=body)
     buckets = resp.get("aggregations", {}).get("by_level", {}).get("buckets", [])
     return buckets
+
+
+def search_logs(query: str, limit: int = 10):
+    body = {
+        "size": limit,
+        "query": {
+            "match": {
+                "message": {"query": query, "auto_generate_synonyms_phrase_query": True}
+            }
+        },
+        "sort": {"timestamp": "desc"},
+    }
+    resp = es.search(index=INDEX_NAME, body=body)["hits"]["hits"]
+    if not resp:
+        return {"message": "No logs found"}
+    return [{"id": hit["_id"], "log": LogEntry(**hit["_source"])} for hit in resp]

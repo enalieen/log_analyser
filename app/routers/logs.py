@@ -52,3 +52,9 @@ async def del_log_endpoint(id: str):
 async def aggregate_endpoint():
     res = es_funcs.aggregate_by_level()
     return res
+
+
+@router.get("/search")
+async def sort_endpoint(query: str):
+    res = es_funcs.search_logs(query)
+    return res
