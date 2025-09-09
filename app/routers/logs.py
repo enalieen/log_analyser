@@ -46,3 +46,9 @@ def upd_log_endpoint(id: str, entry: LogsEntry):
 async def del_log_endpoint(id: str):
     msg = es_funcs.del_log(id)
     return msg
+
+
+@router.get("/sort")
+async def aggregate_endpoint():
+    res = es_funcs.aggregate_by_level()
+    return res

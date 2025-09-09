@@ -1,7 +1,7 @@
 import datetime
 from typing import Optional, List
+from app.utils.helpers import classify_log
 
-from networkx import rescale_layout
 from app.utils.config import (
     INDEX_NAME,
     es_client as es,
@@ -94,31 +94,14 @@ def filter_logs(
         "sort": {"timestamp": "desc"},
     }
     hits = es.search(index=INDEX_NAME, body=body)
-    rescale_layout = hits["hits"]["hits"]
-    for hit in rescale_layout:
+    result = hits["hits"]["hits"]
+    for hit in result:
         return {"id": hit["_id"], "log": LogEntry(**hit["_source"])}
 
 
-def classify_log(log: dict) -> str:
-    msg = log.get("message", "").lower()
-
-    if any(word in msg for word in ["error", "fail", "exception", "crash"]):
-        return "error"
-    elif any(word in msg for word in ["warn", "deprecated", "retry"]):
-        return "warning"
-    elif any(word in msg for word in ["debug", "trace", "verbose"]):
-        return "debug"
-    elif any(
-        word in msg for word in ["login", "logout", "auth", "token", "unauthorized"]
-    ):
-        return "auth"
-    elif any(word in msg for word in ["sql", "database", "query", "connection"]):
-        return "database"
-    elif any(word in msg for word in ["timeout", "dns", "socket", "network"]):
-        return "network"
-    elif any(word in msg for word in ["slow", "latency", "performance"]):
-        return "performance"
-    elif any(word in msg for word in ["payment", "transaction", "billing"]):
-        return "payment"
-    else:
-        return "info"
+def aggregate_by_level():
+    # to return only aggregation results, set size to 0, without search hits:
+    body = {"size": 0, "aggs": {"by_level": {"terms": {"field": "level.keyword"}}}}
+    resp = es.search(index=INDEX_NAME, body=body)
+    buckets = resp.get("aggregations", {}).get("by_level", {}).get("buckets", [])
+    return buckets
