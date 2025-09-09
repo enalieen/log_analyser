@@ -1,5 +1,7 @@
 import datetime
 from typing import Optional, List
+
+from networkx import rescale_layout
 from app.utils.config import (
     INDEX_NAME,
     es_client as es,
@@ -27,8 +29,8 @@ def create_index():
 
 def save_log(log: dict):
     log["level"] = classify_log(log)
-    response = es.index(index=INDEX_NAME, document=log)
     log["tags"] = get_tags(log["message"])
+    response = es.index(index=INDEX_NAME, document=log)
     return response, response["_id"]
 
 
@@ -36,10 +38,10 @@ def get_logs():
     query = {"query": {"match_all": {}}}
     try:
         response = es.search(index=INDEX_NAME, body=query)
-
         hits = response["hits"]["hits"]
+
         # return list of dicts with id + log data
-        return [{"id": hit["_id"], **hit["_source"]} for hit in hits]
+        return [{"id": hit["_id"], "log": LogEntry(**hit["_source"])} for hit in hits]
     except:
         return {"message": "No logs found"}
 
@@ -75,7 +77,7 @@ def filter_logs(
     tags: Optional[List[str]] = None,
     limit: Optional[int] = 10,
 ):
-    must = {}
+    must = []
     limit = 10 if limit is None else limit
     if time:
         must.append({"term": {"timestamp": time.isoformat()}})
@@ -83,13 +85,18 @@ def filter_logs(
         must.append({"term": {"level": level}})
     if tags:
         for tag in tags:
+            # each tag must be present
             must.append({"term": {"tags": tag}})
+
     body = {
         "size": limit,
-        "query": {"bool": {"must": must}, "sort": {"timestamp": "desc"}},
+        "query": {"bool": {"must": must}},
+        "sort": {"timestamp": "desc"},
     }
     hits = es.search(index=INDEX_NAME, body=body)
-    return hits
+    rescale_layout = hits["hits"]["hits"]
+    for hit in rescale_layout:
+        return {"id": hit["_id"], "log": LogEntry(**hit["_source"])}
 
 
 def classify_log(log: dict) -> str:
