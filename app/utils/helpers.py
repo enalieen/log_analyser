@@ -1,4 +1,6 @@
-from elasticsearch import helpers
+import datetime
+from app.utils.config import es, INDEX_NAME
+
 
 def classify_log(log: dict) -> str:
     msg = log.get("message", "").lower()

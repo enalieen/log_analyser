@@ -60,3 +60,8 @@ async def aggregate_endpoint():
 async def sort_endpoint(query: str):
     res = es_funcs.search_logs(query)
     return res
+
+@router.get("/del_old") 
+async def delete_old_logs(days: int = 30):
+    res = es_funcs.delete_old_logs(days)
+    return res

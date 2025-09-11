@@ -1,5 +1,7 @@
-import datetime
+from ast import Index
+from datetime import datetime, timedelta
 from typing import Optional, List
+from app.main import index
 from app.utils.helpers import classify_log
 
 from app.utils.config import (
@@ -31,6 +33,8 @@ def save_log(log: dict):
     log["level"] = classify_log(log)
     log["tags"] = get_tags(log["message"])
     response = es.index(index=INDEX_NAME, document=log)
+    if log["level"] == "error":
+        trigger_alert(log)
     return response, response["_id"]
 
 
@@ -133,4 +137,42 @@ def search_logs(query: str, limit: int = 10):
     return [{"id": hit["_id"], "log": LogEntry(**hit["_source"])} for hit in resp]
 
 
-""" def get_alerts() """
+def get_alerts():
+    body = {
+        "query": {"term": {"level.keyword": "error"}},
+        "sort": {"timestamp": "desc"},
+    }
+    resp = es.search(index=INDEX_NAME, body=body)["hits"]["hits"]
+    return [hit["_source"] for hit in resp]
+
+
+def trigger_alert(log: LogEntry):
+    alert = {
+        "time": log.get("timestamp"),
+        "message": log.get("message"),
+        "level": log.get("level"),
+        "tags": log.get("tags", []),
+        "alert": True,
+    }
+    print(alert)
+    return alert
+
+
+def delete_old_logs(days):
+    # timedelta is a time range
+    cutoff_date = datetime.now() - datetime.timedelta(days=days)
+    body = {"query": {"range": {"timestamp": {"lt": cutoff_date.isoformat()}}}}
+    old_logs = {}
+    old_logs = es.search(index=INDEX_NAME, body=body)["hits"]["hits"]
+    if old_logs:
+        for log in old_logs:
+            res = es.delete(index=INDEX_NAME, id=log["_id"])
+            return res
+    return {"message": "No old logs found"}
+
+
+def archive_old_logs(days: int = 30):
+    cutoff = datetime.now() - datetime.timedelta(days=days)
+    body = {"query": {"range": {"timestamp": {"lt": cutoff.isoformat()}}}}
+    res = es.delete_by_query(index=INDEX_NAME, body=body)
+    return res

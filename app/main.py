@@ -1,7 +1,8 @@
 from fastapi import FastAPI
 from app.routers import logs
-from app.services.elastic import create_index
+from app.services.elastic import archive_old_logs, create_index
 from app.utils.config import es_client as es
+from apscheduler.schedulers.background import BackgroundScheduler
 
 
 app = FastAPI(title="Log Analyzer API")
@@ -18,3 +19,7 @@ def index():
         return {"message": f"API is running. Existing index: {r}"}
     except Exception as e:
         return {"message": f"API is running. Existing index: {e}"}
+
+
+scheduler = BackgroundScheduler()
+scheduler.add_job(func=archive_old_logs, trigger="interval", hours=48)
