@@ -12,7 +12,7 @@ from app.models import LogEntry
 from app.services.ml import get_tags
 
 
-def create_index():
+def create_index(index: str = INDEX_NAME):
     # service, host, tags to be added
     mappings = {
         "mappings": {
@@ -24,9 +24,9 @@ def create_index():
             }
         }
     }
-    if not es.indices.exists(index=INDEX_NAME).body:
-        es.indices.create(index=INDEX_NAME, body=mappings)
-    return INDEX_NAME
+    if not es.indices.exists(index=index):
+        es.indices.create(index=index, body=mappings)
+    return index
 
 
 def save_log(log: dict):
@@ -174,5 +174,12 @@ def delete_old_logs(days):
 def archive_old_logs(days: int = 30):
     cutoff = datetime.now() - datetime.timedelta(days=days)
     body = {"query": {"range": {"timestamp": {"lt": cutoff.isoformat()}}}}
+    logs = es.search(index=INDEX_NAME, body=body, size=500)["hits"]["hits"]
+    if logs:
+        create_index("logs_archive")  # ensure archive index exists
+        for log in logs:
+            es.index(index="logs_archive", document=log["_source"])
+    else:
+        return {"message": "No old logs to archive"}
     res = es.delete_by_query(index=INDEX_NAME, body=body)
     return res
