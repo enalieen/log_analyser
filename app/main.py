@@ -21,5 +21,6 @@ def index():
         return {"message": f"API is running. Existing index: {e}"}
 
 
+# calling the archive_old_logs function every 48 hours
 scheduler = BackgroundScheduler()
 scheduler.add_job(func=archive_old_logs, trigger="interval", hours=48)

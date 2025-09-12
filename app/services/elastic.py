@@ -172,6 +172,7 @@ def delete_old_logs(days):
 
 
 def archive_old_logs(days: int = 30):
+    print("Archiving old logs..., every 48 hours action")
     cutoff = datetime.now() - datetime.timedelta(days=days)
     body = {"query": {"range": {"timestamp": {"lt": cutoff.isoformat()}}}}
     logs = es.search(index=INDEX_NAME, body=body, size=500)["hits"]["hits"]
