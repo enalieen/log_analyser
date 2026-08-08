@@ -4,3 +4,4 @@ uvicorn
 elasticsearch<9,>=8
 yake
 apscheduler
+typing

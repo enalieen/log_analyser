@@ -10,6 +10,7 @@ from app.utils.config import (
 )
 from app.models import LogEntry
 from app.services.ml import get_tags
+# import httpextensio
 
 
 def create_index(index: str = INDEX_NAME):
@@ -39,7 +40,7 @@ def save_log(log: dict):
 
 
 def get_logs():
-    query = {"query": {"match_all": {}}}
+    body = {"size": 10, "query": {"match_all": {}} }
     try:
         response = es.search(index=INDEX_NAME, body=query)
         hits = response["hits"]["hits"]
